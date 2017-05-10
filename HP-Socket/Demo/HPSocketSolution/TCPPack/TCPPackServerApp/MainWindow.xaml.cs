@@ -15,14 +15,16 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace TCPPullServerApp
+namespace TCPPackServerApp
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
     public partial class MainWindow : Window
     {
-        HPSocketCS.TcpPullServer<Models.ClientInfo> Server = new HPSocketCS.TcpPullServer<Models.ClientInfo>();
+        private int PkgHeaderSize = Marshal.SizeOf(new Models.PkgHeader());
+        HPSocketCS.TcpPackServer<Models.ClientInfo> Server = new HPSocketCS.TcpPackServer<Models.ClientInfo>();
+
         ObservableCollection<Models.ClientInfo> _clients = new ObservableCollection<Models.ClientInfo>();
 
         public ObservableCollection<Models.ClientInfo> Clients
@@ -37,23 +39,22 @@ namespace TCPPullServerApp
                 _clients = value;
             }
         }
-        private int PkgHeaderSize = Marshal.SizeOf(new Models.PkgHeader());
-        private bool IsIgnore = false;
         public MainWindow()
         {
             InitializeComponent();
             Server.OnPrepareListen += Server_OnPrepareListen;
             Server.OnAccept += Server_OnAccept;
-
             Server.OnSend += Server_OnSend;
             Server.OnReceive += Server_OnReceive;
-            
-            //Server.OnPointerDataReceive += Server_OnPointerDataReceive;
             Server.OnClose += Server_OnClose;
-
             Server.OnShutdown += Server_OnShutdown;
-            this.lsb_ClientLst.ItemsSource = this.Clients;
-            this.lsb_ClientLst.DisplayMemberPath = "IpAddress";
+
+            Server.PackHeaderFlag = 0xff;
+            Server.MaxPackSize = 0x1000;
+
+
+
+
         }
 
         private HPSocketCS.HandleResult Server_OnShutdown()
@@ -71,62 +72,65 @@ namespace TCPPullServerApp
             {
                 AddMsg(string.Format("{0} Connect Error,OP:{1},Code:{2}", connId, enOperation, errorCode));
             }
-            this.Dispatcher.BeginInvoke(new Action(() => 
+            this.Dispatcher.BeginInvoke(new Action(() =>
             {
                 this.Clients.Remove(this.Clients.Where(p => p.ConnId == connId).FirstOrDefault());
             }));
             return HPSocketCS.HandleResult.Ok;
         }
 
-        private HPSocketCS.HandleResult Server_OnPointerDataReceive(IntPtr connId, IntPtr pData, int length)
+        private HPSocketCS.HandleResult Server_OnReceive(IntPtr connId, byte[] bytes)
         {
-            return HPSocketCS.HandleResult.Ok;
-        }
-
-        private HPSocketCS.HandleResult Server_OnReceive(IntPtr connId, int length)
-        {
-            var client = Server.GetExtra(connId);
-            if (client == null)
+            var clientInfo = Server.GetExtra<Models.ClientInfo>(connId);
+            if (clientInfo != null)
             {
-                AddMsg(string.Format("Receive Msg From {0} , Error: {1}", connId, Server.ErrorMessage));
+                if (bytes.Length<=20)
+                {
+                    AddMsg(string.Format(" > [{0},OnReceive] -> {1}:{2} ({3} bytes,Content:{4})", clientInfo.ConnId, clientInfo.IpAddress, clientInfo.Port, bytes.Length, Encoding.Default.GetString(bytes)));
+                    
+
+                }
+                else
+                {
+                    //解析Package
+                    Models.PkgInfo pkginfo = clientInfo.PkgInfo;
+                    int NeedLength = pkginfo.Length;
+                    int RemainLength = bytes.Length;
+                    int StartIndex = 0;
+                    IntPtr ptr = IntPtr.Zero;
+                    while (RemainLength>=NeedLength)
+                    {
+                        RemainLength -= NeedLength;
+                        ptr = Marshal.AllocHGlobal(NeedLength);
+                        Marshal.Copy(bytes, StartIndex, ptr, NeedLength);
+                        StartIndex += NeedLength;
+                        if (pkginfo.IsHeader)
+                        {
+                            Models.PkgHeader head = Marshal.PtrToStructure<Models.PkgHeader>(ptr);
+                            NeedLength = head.BodySize;
+                        }
+                        else
+                        {
+                            byte[] bodybytes = new byte[NeedLength];
+                            Marshal.Copy(ptr, bodybytes, 0, NeedLength);
+                            Models.Person person = (Models.Person)Server.BytesToObject(bodybytes);
+                            AddMsg(string.Format(" {0},OnReceive -> Name:{1},Age:{2},Address:{3}", clientInfo.ConnId, person.Name, person.Age, person.Address));
+                            NeedLength = PkgHeaderSize;
+                        }
+                        pkginfo.IsHeader = !pkginfo.IsHeader;
+                        if (ptr!=IntPtr.Zero)
+                        {
+                            Marshal.FreeHGlobal(ptr);
+                        }
+                    }
+                }
+                return HPSocketCS.HandleResult.Ok;
+            }
+            else
+            {
+                AddMsg(string.Format(" > [{0},OnReceive] -> ({1} bytes)", connId, bytes.Length));
                 return HPSocketCS.HandleResult.Error;
             }
-            if (IsIgnore)
-            {
-                return HPSocketCS.HandleResult.Ignore;
-            }
-            Models.PkgInfo pkginfo = client.PkgInfo;
-            int requiredLegth = pkginfo.Length;
-            int remainLength = length;
-            while (remainLength>=requiredLegth)
-            {
-                IntPtr bufferPtr = IntPtr.Zero;
-                remainLength -= requiredLegth;
-                bufferPtr = Marshal.AllocHGlobal(requiredLegth);
-                if (Server.Fetch(connId,bufferPtr,requiredLegth) == HPSocketCS.FetchResult.Ok)
-                {
-                    if (pkginfo.IsHeader)
-                    {
-                        Models.PkgHeader head = (Models.PkgHeader)Marshal.PtrToStructure(bufferPtr, typeof(Models.PkgHeader));
-                        AddMsg(string.Format("Receive Msg from {0},Buffer Total Size {1}, Head Id {2},BodySize {3}", connId,length, head.Id, head.BodySize));
-                        requiredLegth = head.BodySize;
-                    }
-                    else
-                    {
-                        string ReceMsg = Marshal.PtrToStringAnsi(bufferPtr,requiredLegth);
-                        AddMsg(string.Format("Receive Msg from {0},Buffer Total Size {1},Msg:{2}", connId, length, ReceMsg));
-                        requiredLegth = PkgHeaderSize;
-                    }
-                    pkginfo.IsHeader = !pkginfo.IsHeader;
-
-                }
-                if (bufferPtr!=IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(bufferPtr);
-                }
-
-            }
-            return HPSocketCS.HandleResult.Ok;
         }
 
         private HPSocketCS.HandleResult Server_OnSend(IntPtr connId, byte[] bytes)
@@ -146,7 +150,7 @@ namespace TCPPullServerApp
             {
                 AddMsg(string.Format("{0} OnAccept,Error", connId));
             }
-            //设置附加信息
+            ////设置附加信息
             Models.ClientInfo client = new Models.ClientInfo()
             {
                 ConnId = connId,
@@ -158,7 +162,7 @@ namespace TCPPullServerApp
                     Length = PkgHeaderSize
                 },
             };
-            if (Server.SetExtra(connId,client)==false)
+            if (Server.SetExtra(connId, client) == false)
             {
                 AddMsg(string.Format("{0} Accept,SetConnectionExtra Fiale", connId));
                 return HPSocketCS.HandleResult.Error;
@@ -177,7 +181,7 @@ namespace TCPPullServerApp
 
         private void btn_Start_Click(object sender, RoutedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(this.txt_Server.Text)&&!string.IsNullOrEmpty(this.txt_Port.Text))
+            if (!string.IsNullOrEmpty(this.txt_Server.Text) && !string.IsNullOrEmpty(this.txt_Port.Text))
             {
                 string ip = this.txt_Server.Text;
                 ushort port = ushort.Parse(this.txt_Port.Text);
@@ -192,7 +196,6 @@ namespace TCPPullServerApp
                     AddMsg(string.Format("Server Start Failed,ErrorCode {0},ErrorMsg {1}", Server.ErrorCode, Server.ErrorMessage));
                 }
             }
-            
         }
 
         private void btn_Stop_Click(object sender, RoutedEventArgs e)
@@ -223,49 +226,6 @@ namespace TCPPullServerApp
             {
                 this.lsb_msg.Items.Add(message);
             }));
-        }
-
-        private void ch_IgnoreMsg_Checked(object sender, RoutedEventArgs e)
-        {
-            IsIgnore = true;
-        }
-
-        private void ch_IgnoreMsg_Unchecked(object sender, RoutedEventArgs e)
-        {
-            IsIgnore = false;
-        }
-
-        private void btn_PullData_Click(object sender, RoutedEventArgs e)
-        {
-            if (!IsIgnore)
-            {
-                return;
-            }
-            bool isHead = true;
-            int peekLength = PkgHeaderSize;
-            IntPtr bufferPtr = IntPtr.Zero;
-            bufferPtr = Marshal.AllocHGlobal(peekLength);
-
-            while (Server.Fetch(this.Clients.First().ConnId,bufferPtr,peekLength) == HPSocketCS.FetchResult.Ok)
-            {
-                if (isHead)
-                {
-                    Models.PkgHeader head =(Models.PkgHeader)Marshal.PtrToStructure(bufferPtr, typeof(Models.PkgHeader));
-                    peekLength = head.BodySize;
-                }
-                else
-                {
-                    string ReceMsg = Marshal.PtrToStringAnsi(bufferPtr, peekLength);
-                    AddMsg(string.Format("Receive Msg from {0},Msg:{1}", this.Clients.First().ConnId, ReceMsg));
-                    peekLength = PkgHeaderSize;
-                }
-                isHead = !isHead;
-                if (bufferPtr!=IntPtr.Zero)
-                {
-                    Marshal.FreeHGlobal(bufferPtr);
-                }
-                bufferPtr = Marshal.AllocHGlobal(peekLength);
-            }
         }
     }
 }

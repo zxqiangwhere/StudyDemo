@@ -928,6 +928,10 @@ namespace HPSocketCS
                 Marshal.StructureToPtr(structure, bufferIntPtr, true);
                 Marshal.Copy(bufferIntPtr, buffer, 0, size);
             }
+            catch(Exception e)
+            {
+                string error = e.Message;
+            }
             finally
             {
                 Marshal.FreeHGlobal(bufferIntPtr);
