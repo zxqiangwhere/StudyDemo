@@ -1,0 +1,56 @@
+﻿<Window x:Class="TCPPullServerApp.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TCPPullServerApp"
+        mc:Ignorable="d"
+        Title="TCPPullServerApp" Height="450" Width="600">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.1*" MaxHeight="30"/>
+            <RowDefinition Height="0.7*"/>
+            <RowDefinition Height="0.1*" MaxHeight="30"/>
+            <RowDefinition Height="0.1*" MaxHeight="30"/>
+        </Grid.RowDefinitions>
+        <Border BorderThickness="1" BorderBrush="Gray">
+            <StackPanel Orientation="Horizontal">
+                <Label VerticalContentAlignment="Center" Content="Server:"/>
+                <TextBox VerticalContentAlignment="Center" x:Name="txt_Server" Width="100" Text="127.0.0.1"/>
+                <Label VerticalContentAlignment="Center" Content="Port:"/>
+                <TextBox x:Name="txt_Port" VerticalContentAlignment="Center" Width="50" Text="1234"/>
+                <Button Margin="20,0,0,0" Content="Start" x:Name="btn_Start" Click="btn_Start_Click"/>
+                <Button Margin="10,0,0,0" Content="Stop" x:Name="btn_Stop" Click="btn_Stop_Click"/>
+                <CheckBox x:Name="ch_IgnoreMsg" 
+                          Checked="ch_IgnoreMsg_Checked"
+                          Unchecked="ch_IgnoreMsg_Unchecked"
+                          Content="Ignore Message" Margin="10,0,0,0"  VerticalContentAlignment="Center" IsThreeState="False"/>
+                <Button Content="Pull Data" x:Name="btn_PullData" Margin="10,0,0,0" Click="btn_PullData_Click"/>
+            </StackPanel>
+        </Border>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.6*"/>
+                <ColumnDefinition Width="0.4*"/>
+            </Grid.ColumnDefinitions>
+            <ListBox BorderThickness="0" x:Name="lsb_msg">
+
+            </ListBox>
+            <GroupBox Header="Client List" Grid.Column="1">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="0.8*"/>
+                        <RowDefinition Height="0.2*" MaxHeight="40"/>
+                    </Grid.RowDefinitions>
+                    <ListBox x:Name="lsb_ClientLst"/>
+                    <StackPanel Grid.Row="1" Orientation="Horizontal">
+                        <Label Content="Send Msg" VerticalContentAlignment="Center"/>
+                        <TextBox x:Name="txt_SendMsg" VerticalContentAlignment="Center" Width="80"/>
+                        <Button Content="Send" Width="50" x:Name="btn_SendMsg"/>
+                        <Button Content="Disconnect" x:Name="btn_disConnect" Click="btn_disConnect_Click"/>
+                    </StackPanel>
+                </Grid>
+            </GroupBox>
+        </Grid>
+    </Grid>
+</Window>
