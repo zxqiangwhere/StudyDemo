@@ -248,6 +248,7 @@ public class Sdk
 
 
     /****************************************************/
+    #region HPSocket4C.dll 回调函数
     /************** HPSocket4C.dll 回调函数 **************/
     /* Agent & Server & Clent */
     public delegate HandleResult OnSend(IntPtr pSender, IntPtr connId, IntPtr pData, int length);
@@ -269,6 +270,9 @@ public class Sdk
     public delegate HandleResult OnAccept(IntPtr pSender, IntPtr connId, IntPtr pClient);
 
     /****************************************************/
+    #endregion 
+
+    #region HPSocket4C.dll 导出函数
     /************** HPSocket4C.dll 导出函数 **************/
 
     /// <summary>
@@ -616,6 +620,9 @@ public class Sdk
 
 
     /**********************************************************************************/
+    #endregion
+
+    #region Server 回调函数设置方法
     /***************************** Server 回调函数设置方法 *****************************/
 
     [DllImport(HPSOCKET_DLL_PATH)]
@@ -636,6 +643,9 @@ public class Sdk
     public static extern void HP_Set_FN_Server_OnShutdown(IntPtr pListener, OnShutdown fn);
 
     /**********************************************************************************/
+    #endregion
+
+    #region Client 回调函数设置方法
     /***************************** Client 回调函数设置方法 *****************************/
 
     [DllImport(HPSOCKET_DLL_PATH)]
@@ -654,6 +664,9 @@ public class Sdk
     public static extern void HP_Set_FN_Client_OnClose(IntPtr pListener, OnClose fn);
 
     /**********************************************************************************/
+    #endregion
+
+    #region Agent 回调函数设置方法
     /****************************** Agent 回调函数设置方法 *****************************/
 
     [DllImport(HPSOCKET_DLL_PATH)]
@@ -674,6 +687,9 @@ public class Sdk
     public static extern void HP_Set_FN_Agent_OnShutdown(IntPtr pListener, OnShutdown fn);
 
     /**************************************************************************/
+    #endregion
+
+    #region Server 操作方法
     /***************************** Server 操作方法 *****************************/
 
     /// <summary>
@@ -788,6 +804,9 @@ public class Sdk
     public static extern bool HP_Server_DisconnectSilenceConnections(IntPtr pServer, uint dwPeriod, bool bForce);
 
     /******************************************************************************/
+    #endregion
+
+    #region Server 属性访问方法
     /***************************** Server 属性访问方法 *****************************/
 
     /// <summary>
@@ -1083,6 +1102,9 @@ public class Sdk
     public static extern bool HP_Server_IsMarkSilence(IntPtr pServer);
 
     /**********************************************************************************/
+    #endregion
+    
+    #region TCP Server 操作方法
     /***************************** TCP Server 操作方法 *****************************/
 
     /// <summary>
@@ -1099,6 +1121,9 @@ public class Sdk
     public static extern bool HP_TcpServer_SendSmallFile(IntPtr pServer, IntPtr connId, string lpszFileName, ref WSABUF pHead, ref WSABUF pTail);
 
     /**********************************************************************************/
+    #endregion
+    
+    #region TCP Server 属性访问方法
     /***************************** TCP Server 属性访问方法 *****************************/
 
     /// <summary>
@@ -1184,6 +1209,9 @@ public class Sdk
 
 
     /**********************************************************************************/
+    #endregion
+
+    #region UDP Server 属性访问方法
     /***************************** UDP Server 属性访问方法 *****************************/
 
     /// <summary>
@@ -1250,6 +1278,9 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern uint HP_UdpServer_GetDetectInterval(IntPtr pServer);
     /******************************************************************************/
+    #endregion
+
+    #region Client 组件操作方法
     /***************************** Client 组件操作方法 *****************************/
 
     /// <summary>
@@ -1345,6 +1376,9 @@ public class Sdk
 
 
     /******************************************************************************/
+    #endregion
+
+    #region Client 属性访问方法
     /***************************** Client 属性访问方法 *****************************/
 
     /// <summary>
@@ -1492,6 +1526,9 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern SendPolicy HP_Client_GetSendPolicy(IntPtr pClient);
     /**********************************************************************************/
+    #endregion
+
+    #region TCP Client 操作方法
     /***************************** TCP Client 操作方法 *****************************/
 
     /// <summary>
@@ -1507,6 +1544,9 @@ public class Sdk
     public static extern bool HP_TcpClient_SendSmallFile(IntPtr pClient, string lpszFileName, ref WSABUF pHead, ref WSABUF pTail);
 
     /**********************************************************************************/
+    #endregion
+
+    #region TCP Client 属性访问方法
     /***************************** TCP Client 属性访问方法 *****************************/
 
     /// <summary>
@@ -1558,6 +1598,9 @@ public class Sdk
     public static extern uint HP_TcpClient_GetKeepAliveInterval(IntPtr pClient);
 
     /**********************************************************************************/
+    #endregion
+
+    #region UDP Client 属性访问方法
     /***************************** UDP Client 属性访问方法 *****************************/
 
     /// <summary>
@@ -1609,6 +1652,8 @@ public class Sdk
     public static extern uint HP_UdpClient_GetDetectInterval(IntPtr pClient);
 
     /**************************************************************************/
+    #endregion
+    #region Agent 属性访问
     /***************************** Agent 操作方法 *****************************/
 
     /// <summary>
@@ -1755,6 +1800,9 @@ public class Sdk
     public static extern bool HP_TcpAgent_SendSmallFile(IntPtr pAgent, IntPtr connId, string lpszFileName, ref WSABUF pHead, ref WSABUF pTail);
 
     /******************************************************************************/
+    #endregion
+
+    #region Agent 属性访问方法
     /***************************** Agent 属性访问方法 *****************************/
 
     /// <summary>
@@ -2048,6 +2096,9 @@ public class Sdk
     public static extern bool HP_Agent_IsMarkSilence(IntPtr pAgent);
 
     /**********************************************************************************/
+    #endregion
+
+    #region  TCP Agent 属性访问方法
     /***************************** TCP Agent 属性访问方法 *****************************/
 
     /// <summary>
@@ -2115,6 +2166,9 @@ public class Sdk
     public static extern uint HP_TcpAgent_GetKeepAliveInterval(IntPtr pAgent);
 
     /***************************************************************************************/
+    #endregion
+
+    #region TCP Pull Server 组件操作方法
     /***************************** TCP Pull Server 组件操作方法 *****************************/
 
     /// <summary>
@@ -2142,9 +2196,13 @@ public class Sdk
     public static extern FetchResult HP_TcpPullServer_Peek(IntPtr pServer, IntPtr connId, IntPtr pBuffer, int length);
 
     /***************************************************************************************/
+    #endregion
+
     /***************************** TCP Pull Server 属性访问方法 *****************************/
 
     /***************************************************************************************/
+
+    #region TCP Pull Client 组件操作方法
     /***************************** TCP Pull Client 组件操作方法 *****************************/
 
     /// <summary>
@@ -2172,9 +2230,11 @@ public class Sdk
     public static extern FetchResult HP_TcpPullClient_Peek(IntPtr pClient, IntPtr pBuffer, int length);
 
     /***************************************************************************************/
+    #endregion
     /***************************** TCP Pull Client 属性访问方法 *****************************/
 
     /***************************************************************************************/
+    #region TCP Pull Agent 组件操作方法
     /***************************** TCP Pull Agent 组件操作方法 *****************************/
 
     /// <summary>
@@ -2202,6 +2262,7 @@ public class Sdk
     public static extern FetchResult HP_TcpPullAgent_Peek(IntPtr pAgent, IntPtr connId, IntPtr pBuffer, int length);
 
     /***************************************************************************************/
+    #endregion
     /***************************** TCP Pull Agent 属性访问方法 *****************************/
 
     /***************************************************************************************/
@@ -2210,6 +2271,8 @@ public class Sdk
     /***************************** TCP Pack Server 组件操作方法 *****************************/
 
     /***************************************************************************************/
+
+    #region TCP Pack Server 属性访问方法
     /***************************** TCP Pack Server 属性访问方法 *****************************/
 
     /// <summary>
@@ -2244,9 +2307,11 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern ushort HP_TcpPackServer_GetPackHeaderFlag(IntPtr pServer);
     /***************************************************************************************/
+    #endregion
     /***************************** TCP Pack Agent 组件操作方法 *****************************/
 
     /***************************************************************************************/
+    #region TCP Pack Agent 属性访问方法
     /***************************** TCP Pack Agent 属性访问方法 *****************************/
 
     /// <summary>
@@ -2281,9 +2346,11 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern ushort HP_TcpPackAgent_GetPackHeaderFlag(IntPtr pAgent);
     /***************************************************************************************/
+    #endregion
     /***************************** TCP Pack Client 组件操作方法 *****************************/
 
     /***************************************************************************************/
+    #region TCP Pack Client 属性访问方法
     /***************************** TCP Pack Client 属性访问方法 *****************************/
     /// <summary>
     /// 设置数据包最大长度（有效数据包最大长度不能超过 524287/0x7FFFF 字节，默认：262144/0x40000）
@@ -2317,6 +2384,9 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern ushort HP_TcpPackClient_GetPackHeaderFlag(IntPtr pClient);
     /***************************************************************************************/
+    #endregion
+
+    #region 其它方法
     /*************************************** 其它方法 ***************************************/
 
     /// <summary>
@@ -2551,7 +2621,7 @@ public class Sdk
     [DllImport(HPSOCKET_DLL_PATH)]
     public static extern ulong SYS_HToN64(ulong value);
 
-
+    #endregion
     /*
      * 编码转换
     // CP_XXX -> UNICODE
